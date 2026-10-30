@@ -16,7 +16,7 @@ jobs:
           java-version: "17"
       - name: Restaurar fonte
         run: |
-          cat source.parts/[0-9][0-9][0-9] | base64 -d > source.zip
+          cat source.parts/v030-* | base64 -d > source.zip
           unzip -o source.zip
       - name: Preparar Android SDK
         run: |
