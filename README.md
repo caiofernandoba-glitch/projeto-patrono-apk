@@ -1,3 +1,3 @@
-# Projeto Patrono Android
+# Patrono
 
-Versao 0.2.0. O GitHub Actions gera o APK instalavel.
+APK Android de teste do Patrono.
