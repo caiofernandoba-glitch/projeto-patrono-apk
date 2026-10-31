@@ -14,12 +14,29 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Restaurar fonte
+      - name: Restaurar e corrigir fonte
         run: |
           cat source.parts/atena-{000..012} | base64 -d > source.zip
           rm -rf app backend build.gradle settings.gradle gradle.properties
           unzip -o source.zip
           cp overrides/index.html app/src/main/assets/index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/assets/index.html')
+          s=p.read_text()
+          old="function key(){return localStorage.getItem(KEY)||''}function connected(){return !!key()}"
+          new="function connected(){try{return !!(window.Android&&typeof Android.isAtenaConfigured==='function'&&Android.isAtenaConfigured())}catch(e){return false}}"
+          assert old in s
+          s=s.replace(old,new)
+          old="function open(k){const p=panels[k];if(!p){tell('Painel indisponível agora');return}show('#panel');$('#panelTitle').textContent=p.title;$('#panelSub').textContent=p.sub;mark(k);const frame=$('#frame');frame.src=p.url}"
+          new="function open(k){const p=panels[k];if(!p){tell('Painel indisponível agora');return}try{if(window.Android&&typeof Android.openPanel==='function'){Android.openPanel(p.url);return}}catch(e){}show('#panel');$('#panelTitle').textContent=p.title;$('#panelSub').textContent=p.sub;mark(k);const frame=$('#frame');frame.src=p.url}"
+          assert old in s
+          s=s.replace(old,new)
+          old="async function askAtena(){throw new Error('O chat estratégico ficará disponível na versão Android do Projeto Patrono.')}"
+          new="let atenaPending=null;window.onAtenaResponse=function(text){if(atenaPending){const p=atenaPending;atenaPending=null;p.resolve(String(text||''))}};window.onAtenaError=function(text){if(atenaPending){const p=atenaPending;atenaPending=null;p.reject(new Error(String(text||'Não consegui falar com a Atena agora.')))}};async function askAtena(message,history=chatHistory){if(!(window.Android&&typeof Android.askAtena==='function'))throw new Error('Atena indisponível neste aparelho. Reinstale a versão atualizada.');if(!connected())throw new Error('A Atena ainda não está configurada.');return new Promise((resolve,reject)=>{atenaPending={resolve,reject};try{Android.askAtena(String(message||''),JSON.stringify(history||[]))}catch(e){atenaPending=null;reject(new Error('Não consegui iniciar a conversa com a Atena.'))}})}"
+          assert old in s
+          p.write_text(s.replace(old,new))
+          PY
       - name: Preparar Android SDK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
@@ -34,14 +51,14 @@ jobs:
           /opt/gradle-8.11.1/bin/gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Patrono-0.4.4-debug
+          name: Patrono-0.4.5-debug
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publicar APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.4.4
-          name: Patrono 0.4.4
+          tag_name: v0.4.5
+          name: Patrono 0.4.5
           fail_on_unmatched_files: true
           overwrite_files: true
-          body: 'APK 0.4.4 com Trilhas atualizadas: avatar de beca em azul escuro e avatar com livro em azul claro.'
+          body: 'APK 0.4.5: tabelas acessíveis e chat Atena integrado.'
           files: app/build/outputs/apk/debug/app-debug.apk
