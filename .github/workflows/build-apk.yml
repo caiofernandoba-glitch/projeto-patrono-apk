@@ -43,5 +43,5 @@ jobs:
           name: Patrono 0.4.4
           fail_on_unmatched_files: true
           overwrite_files: true
-          body: APK 0.4.4 com Trilhas atualizadas: avatar de beca em azul escuro e avatar com livro em azul claro.
+          body: 'APK 0.4.4 com Trilhas atualizadas: avatar de beca em azul escuro e avatar com livro em azul claro.'
           files: app/build/outputs/apk/debug/app-debug.apk
