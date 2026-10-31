@@ -1,3 +1,1 @@
-# Patrono
-
-APK Android de teste do Patrono.
+Patrono — aplicativo pessoal de organização.
