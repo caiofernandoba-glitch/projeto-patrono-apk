@@ -13,29 +13,35 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
-      - name: Restaurar e corrigir fonte
+          java-version: "17"
+      - name: Restaurar fonte e corrigir Atena
         run: |
           cat source.parts/atena-{000..012} | base64 -d > source.zip
           rm -rf app backend build.gradle settings.gradle gradle.properties
           unzip -o source.zip
-          cp overrides/index.html app/src/main/assets/index.html
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('app/src/main/assets/index.html')
-          s=p.read_text()
-          old="function key(){return localStorage.getItem(KEY)||''}function connected(){return !!key()}"
-          new="function connected(){try{return !!(window.Android&&typeof Android.isAtenaConfigured==='function'&&Android.isAtenaConfigured())}catch(e){return false}}"
-          assert old in s
-          s=s.replace(old,new)
-          old="function open(k){const p=panels[k];if(!p){tell('Painel indisponível agora');return}show('#panel');$('#panelTitle').textContent=p.title;$('#panelSub').textContent=p.sub;mark(k);const frame=$('#frame');frame.src=p.url}"
-          new="function open(k){const p=panels[k];if(!p){tell('Painel indisponível agora');return}try{if(window.Android&&typeof Android.openPanel==='function'){Android.openPanel(p.url);return}}catch(e){}show('#panel');$('#panelTitle').textContent=p.title;$('#panelSub').textContent=p.sub;mark(k);const frame=$('#frame');frame.src=p.url}"
-          assert old in s
-          s=s.replace(old,new)
-          old="async function askAtena(){throw new Error('O chat estratégico ficará disponível na versão Android do Projeto Patrono.')}"
-          new="let atenaPending=null;window.onAtenaResponse=function(text){if(atenaPending){const p=atenaPending;atenaPending=null;p.resolve(String(text||''))}};window.onAtenaError=function(text){if(atenaPending){const p=atenaPending;atenaPending=null;p.reject(new Error(String(text||'Não consegui falar com a Atena agora.')))}};async function askAtena(message,history=chatHistory){if(!(window.Android&&typeof Android.askAtena==='function'))throw new Error('Atena indisponível neste aparelho. Reinstale a versão atualizada.');if(!connected())throw new Error('A Atena ainda não está configurada.');return new Promise((resolve,reject)=>{atenaPending={resolve,reject};try{Android.askAtena(String(message||''),JSON.stringify(history||[]))}catch(e){atenaPending=null;reject(new Error('Não consegui iniciar a conversa com a Atena.'))}})}"
-          assert old in s
-          p.write_text(s.replace(old,new))
+          import re
+          p = Path('app/src/main/assets/index.html')
+          s = p.read_text(encoding='utf-8')
+          modal = '''<div id="settingsModal" style="position:fixed;z-index:9999;inset:0;background:#000a;padding:20px;overflow:auto" hidden><section style="max-width:480px;margin:8vh auto;background:#121a30;color:#fff;padding:20px;border-radius:18px"><h2>Configurações da Atena</h2><label>Endpoint seguro (opcional)</label><input id="geminiEndpoint" type="url" style="width:100%;box-sizing:border-box;margin:6px 0 14px;padding:12px"><label>Chave Gemini</label><input id="geminiApiKey" type="password" style="width:100%;box-sizing:border-box;margin:6px 0 14px;padding:12px"><label>Foto da Atena</label><input id="atenaAvatarUrl" type="url" style="width:100%;box-sizing:border-box;margin:6px 0 14px;padding:12px"><p id="settingsStatus"></p><button id="settingsSave" type="button">Salvar configurações</button> <button id="settingsClear" type="button">Limpar dados locais</button> <button id="settingsClose" type="button">Fechar</button></section></div>'''
+          patch = r'''<script>
+          (()=>{
+          const STORE='patrono.assistant.settings.v2', LEGACY='patrono.assistant.settings.v1', MODEL='models/gemini-3.8-flash';
+          const el=id=>document.getElementById(id); let settings={endpoint:'',geminiApiKey:'',avatarUrl:''};
+          const read=()=>{try{const raw=localStorage.getItem(STORE)||localStorage.getItem(LEGACY)||'{}';const x=JSON.parse(raw);settings={endpoint:String(x.endpoint||'').trim().replace(/\/+$/,''),geminiApiKey:String(x.geminiApiKey||x.apiKey||'').trim(),avatarUrl:String(x.avatarUrl||x.atenaAvatarUrl||x.avatarBaseUrl||'').trim()}}catch(_){}};
+          const configured=()=>!!(settings.endpoint||settings.geminiApiKey);
+          const paint=()=>{const a=el('atenaAvatar'), c=el('connection'), w=el('atenaNotConfigured');if(a)a.style.backgroundImage=settings.avatarUrl?`url("${settings.avatarUrl.replace(/"/g,'%22')}")`:'';if(c)c.textContent=configured()?'● pronta':'● configure a Atena';if(w)w.hidden=configured()};
+          const save=()=>{settings={endpoint:el('geminiEndpoint').value.trim().replace(/\/+$/,''),geminiApiKey:el('geminiApiKey').value.trim(),avatarUrl:el('atenaAvatarUrl').value.trim()};localStorage.setItem(STORE,JSON.stringify(settings));localStorage.setItem(LEGACY,JSON.stringify(settings));paint();el('settingsStatus').textContent=configured()?'Configurações salvas. Atena pronta.':'Informe uma chave ou endpoint.'};
+          window.askAtena=async function(message,history=[]){const text=String(message||'').trim();if(!text)throw Error('Escreva uma mensagem.');if(settings.endpoint){const r=await fetch(settings.endpoint+'/v1/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,history})});const b=await r.json().catch(()=>({}));if(!r.ok||!b.text)throw Error(b.error||'O servidor não respondeu.');return b.text}if(!settings.geminiApiKey)throw Error('Abra a engrenagem e informe a chave Gemini.');const contents=[...history,{role:'user',parts:[{text}]}];const r=await fetch('https://generativelanguage.googleapis.com/v1beta/'+MODEL+':generateContent?key='+encodeURIComponent(settings.geminiApiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents,generationConfig:{temperature:.65,maxOutputTokens:800}})});const b=await r.json().catch(()=>({}));const answer=b?.candidates?.[0]?.content?.parts?.map(x=>x.text||'').join('').trim();if(!r.ok||!answer)throw Error(b?.error?.message||'A API Gemini não respondeu.');return answer};
+          const open=()=>{el('geminiEndpoint').value=settings.endpoint;el('geminiApiKey').value=settings.geminiApiKey;el('atenaAvatarUrl').value=settings.avatarUrl;el('settingsStatus').textContent=configured()?'Atena configurada e pronta.':'Informe uma chave ou endpoint.';el('settingsModal').hidden=false};
+          const init=()=>{read();paint();let gear=el('settingsButton');if(!gear){gear=document.createElement('button');gear.id='settingsButton';gear.type='button';gear.textContent='⚙';gear.style.cssText='position:fixed;right:16px;top:16px;z-index:9998;border:0;border-radius:50%;width:44px;height:44px;background:#334;color:white;font-size:22px';document.body.appendChild(gear)}gear.onclick=open;el('settingsSave').onclick=save;el('settingsClear').onclick=()=>{settings={endpoint:'',geminiApiKey:'',avatarUrl:''};localStorage.removeItem(STORE);localStorage.removeItem(LEGACY);paint()};el('settingsClose').onclick=()=>el('settingsModal').hidden=true};
+          if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+          })();
+          </script>'''
+          if 'id="settingsModal"' not in s: s=s.replace('</body>',modal+patch+'</body>')
+          else: s=s.replace('</body>',patch+'</body>')
+          p.write_text(s,encoding='utf-8')
           PY
       - name: Preparar Android SDK
         run: |
@@ -43,22 +49,20 @@ jobs:
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0"
       - name: Compilar APK
-        env:
-          ATENA_ENDPOINT: ${{ secrets.ATENA_ENDPOINT }}
         run: |
           curl -fsSL https://services.gradle.org/distributions/gradle-8.11.1-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /opt
           /opt/gradle-8.11.1/bin/gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Patrono-0.4.5-debug
+          name: Patrono-0.4.7-debug
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publicar APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.4.5
-          name: Patrono 0.4.5
+          tag_name: v0.4.7
+          name: Patrono 0.4.7
           fail_on_unmatched_files: true
           overwrite_files: true
-          body: 'APK 0.4.5: tabelas acessíveis e chat Atena integrado.'
+          body: "APK 0.4.7: Atena corrigida, configurações persistentes e Gemini 3.8 Flash."
           files: app/build/outputs/apk/debug/app-debug.apk
