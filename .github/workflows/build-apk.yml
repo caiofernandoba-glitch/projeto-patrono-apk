@@ -34,14 +34,14 @@ jobs:
           /opt/gradle-8.11.1/bin/gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Patrono-0.4.3-debug
+          name: Patrono-0.4.4-debug
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publicar APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.4.3
-          name: Patrono 0.4.3
+          tag_name: v0.4.4
+          name: Patrono 0.4.4
           fail_on_unmatched_files: true
           overwrite_files: true
-          body: APK 0.4.3 com Observatório Caio integrado à Rotina e avatar transparente da Atena.
+          body: APK 0.4.4 com Trilhas atualizadas: avatar de beca em azul escuro e avatar com livro em azul claro.
           files: app/build/outputs/apk/debug/app-debug.apk
