@@ -7,10 +7,10 @@ permissions:
   contents: write
 jobs:
   android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -20,11 +20,8 @@ jobs:
           rm -rf app backend build.gradle settings.gradle gradle.properties
           unzip -o source.zip
           cat ui.parts/{000..003} | base64 -d | gunzip > app/src/main/assets/index.html
-      - name: Preparar Android SDK
-        run: |
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Configurar Android SDK
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
       - name: Compilar APK
         run: |
           curl -fsSL https://services.gradle.org/distributions/gradle-8.11.1-bin.zip -o /tmp/gradle.zip
