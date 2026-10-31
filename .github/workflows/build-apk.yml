@@ -13,10 +13,10 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
       - name: Restaurar fonte
         run: |
-          cat source.parts/v031-[0-9][0-9][0-9] | base64 -d > source.zip
+          cat source.parts/atena-* | base64 -d > source.zip
           unzip -o source.zip
       - name: Preparar Android SDK
         run: |
@@ -24,18 +24,22 @@ jobs:
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0"
       - name: Compilar APK
+        env:
+          ATENA_ENDPOINT: ${{ secrets.ATENA_ENDPOINT }}
         run: |
           curl -fsSL https://services.gradle.org/distributions/gradle-8.11.1-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /opt
           /opt/gradle-8.11.1/bin/gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Patrono-0.3.1-debug
+          name: Patrono-0.4.0-debug
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publicar APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.3.1
-          name: Patrono 0.3.1
-          body: APK com integração local do Gemini 2.5 Flash; a chave é configurada no próprio aparelho.
+          tag_name: v0.4.0
+          name: Patrono 0.4.0
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          body: APK com Atena, comandos rápidos, chat dedicado e Gemini 2.5 Flash local.
           files: app/build/outputs/apk/debug/app-debug.apk
