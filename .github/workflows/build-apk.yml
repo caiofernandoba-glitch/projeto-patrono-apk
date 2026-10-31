@@ -16,9 +16,10 @@ jobs:
           java-version: '17'
       - name: Restaurar fonte
         run: |
-          cat source.parts/atena-* | base64 -d > source.zip
+          cat source.parts/atena-{000..012} | base64 -d > source.zip
           rm -rf app backend build.gradle settings.gradle gradle.properties
           unzip -o source.zip
+          cp overrides/index.html app/src/main/assets/index.html
       - name: Preparar Android SDK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
@@ -33,14 +34,14 @@ jobs:
           /opt/gradle-8.11.1/bin/gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Patrono-0.4.2-debug
+          name: Patrono-0.4.3-debug
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publicar APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.4.2
-          name: Patrono 0.4.2
+          tag_name: v0.4.3
+          name: Patrono 0.4.3
           fail_on_unmatched_files: true
           overwrite_files: true
-          body: APK com Atena, comandos rápidos, chat dedicado e Gemini 2.5 Flash local.
+          body: APK 0.4.3 com Observatório Caio integrado à Rotina e avatar transparente da Atena.
           files: app/build/outputs/apk/debug/app-debug.apk
