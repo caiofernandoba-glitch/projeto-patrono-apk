@@ -14,25 +14,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Restaurar fonte e forçar endpoint Gemini
+      - name: Restaurar fonte e corrigir Atena
         run: |
           cat source.parts/atena-{000..012} | base64 -d > source.zip
           rm -rf app backend build.gradle settings.gradle gradle.properties
           unzip -o source.zip
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('overrides/index.html')
-          s = p.read_text()
-          old = "const MODEL = 'gemini-1.5-flash';\n      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;"
-          new = "const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;"
-          if old not in s:
-              raise SystemExit('askAtena: trecho esperado nao encontrado')
-          p.write_text(s.replace(old, new, 1))
-          final = p.read_text()
-          required = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}'
-          if required not in final or 'models/models/' in final:
-              raise SystemExit('askAtena: endpoint final invalido')
-          PY
+          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCmltcG9ydCByZQpwID0gUGF0aCgib3ZlcnJpZGVzL2luZGV4Lmh0bWwiKQpzID0gcC5yZWFkX3RleHQoKQplbmRwb2ludCA9ICJodHRwczovL2dlbmVyYXRpdmVsYW5ndWFnZS5nb29nbGVhcGlzLmNvbS92MWJldGEvbW9kZWxzL2dlbWluaS0xLjUtZmxhc2g6Z2VuZXJhdGVDb250ZW50P2tleT0ke2FwaUtleX0iCnBhdHRlcm4gPSByImNvbnN0XHMrTU9ERUxccyo9XHMqJ2dlbWluaS0xXC41LWZsYXNoJztccypjb25zdFxzK2VuZHBvaW50XHMqPVxzKmBbXmBdKmdlbmVyYXRlQ29udGVudFw/a2V5PVwkXHthcGlLZXlcfWA7IgpvdXQsIGNvdW50ID0gcmUuc3VibihwYXR0ZXJuLCAiY29uc3QgZW5kcG9pbnQgPSBgIiArIGVuZHBvaW50ICsgImA7IiwgcywgY291bnQ9MSkKaWYgY291bnQgIT0gMSBvciBlbmRwb2ludCBub3QgaW4gb3V0IG9yICJtb2RlbHMvbW9kZWxzLyIgaW4gb3V0OgogICAgcmFpc2UgU3lzdGVtRXhpdCgiYXNrQXRlbmEgZW5kcG9pbnQgdmFsaWRhdGlvbiBmYWlsZWQiKQpwLndyaXRlX3RleHQob3V0KQo=' | base64 -d > /tmp/fix_atena.py
+          python3 /tmp/fix_atena.py
           cp overrides/index.html app/src/main/assets/index.html
       - name: Preparar Android SDK
         run: |
@@ -40,8 +28,6 @@ jobs:
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0"
       - name: Compilar APK
-        env:
-          ATENA_ENDPOINT: ${{ secrets.ATENA_ENDPOINT }}
         run: |
           curl -fsSL https://services.gradle.org/distributions/gradle-8.11.1-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /opt
@@ -54,7 +40,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v0.5.3
-          name: Patrono 0.5.3 — Atena Gemini 1.5 Flash
+          name: Patrono 0.5.3 - Atena Gemini 1.5 Flash
           fail_on_unmatched_files: true
           overwrite_files: true
           body: APK 0.5.3 com endpoint explícito do Gemini em askAtena.
