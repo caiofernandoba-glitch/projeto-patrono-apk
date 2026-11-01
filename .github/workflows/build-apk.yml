@@ -10,17 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          persist-credentials: true
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - name: Restaurar e atualizar fonte principal da Atena
+      - name: Restaurar fonte principal da Atena
         run: |
           cat source.parts/atena-{000..012} | base64 -d > source.zip
           rm -rf app backend build.gradle settings.gradle gradle.properties
           unzip -o source.zip
+      - name: Corrigir e validar index.html antes do build
+        run: |
           python3 - <<'PY'
           from pathlib import Path
           old = "const MODEL = 'gemini-1.5-flash';\n      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;"
@@ -30,34 +30,15 @@ jobs:
           if old in text:
               text = text.replace(old, new, 1)
           elif new not in text:
-              raise SystemExit('askAtena: bloco esperado não encontrado')
+              raise SystemExit('askAtena: bloco-modelo esperado não encontrado')
           for name in (main, Path('app/src/main/assets/index.html')):
               name.write_text(text)
               final = name.read_text()
-              if new not in final or 'gemini-1.5-flash' in final or 'models/models/' in final:
-                  raise SystemExit(f'{name}: fonte final inválida')
+              if new not in final:
+                  raise SystemExit(f'{name}: modelo final incorreto')
+              if 'gemini-1.5-flash' in final or 'models/models/' in final:
+                  raise SystemExit(f'{name}: modelo legado ou rota duplicada')
           PY
-      - name: Persistir fonte corrigida no repositório
-        run: |
-          rm -f source-fixed.zip source-fixed.b64
-          zip -qr source-fixed.zip settings.gradle overrides app backend build.gradle gradle.properties README.md COMO_GERAR_APK.txt .github
-          base64 -w0 source-fixed.zip > source-fixed.b64
-          python3 - <<'PY'
-          from pathlib import Path
-          b = Path('source-fixed.b64').read_text()
-          n = 13
-          size = (len(b) + n - 1) // n
-          for i in range(n):
-              Path(f'source.parts/atena-{i:03}').write_text(b[i*size:(i+1)*size)
-          PY
-          rm -f source-fixed.zip source-fixed.b64
-          if ! git diff --quiet -- source.parts/atena-000 source.parts/atena-001 source.parts/atena-002 source.parts/atena-003 source.parts/atena-004 source.parts/atena-005 source.parts/atena-006 source.parts/atena-007 source.parts/atena-008 source.parts/atena-009 source.parts/atena-010 source.parts/atena-011 source.parts/atena-012; then
-            git config user.name github-actions[bot]
-            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add source.parts/atena-000 source.parts/atena-001 source.parts/atena-002 source.parts/atena-003 source.parts/atena-004 source.parts/atena-005 source.parts/atena-006 source.parts/atena-007 source.parts/atena-008 source.parts/atena-009 source.parts/atena-010 source.parts/atena-011 source.parts/atena-012
-            git commit -m "Persiste index.html da Atena no Gemini 3.8 Flash"
-            git push
-          fi
       - name: Preparar Android SDK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
@@ -79,5 +60,5 @@ jobs:
           name: Patrono 0.5.4 - Atena Gemini 3.8 Flash
           fail_on_unmatched_files: true
           overwrite_files: true
-          body: APK 0.5.4 com index.html persistido e validado antes da compilação.
+          body: APK 0.5.4 com index.html da Atena corrigido e validado antes da compilação.
           files: app/build/outputs/apk/debug/app-debug.apk
