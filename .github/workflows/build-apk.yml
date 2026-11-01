@@ -1,4 +1,4 @@
-name: Gerar APK Patrono 0.4.8
+name: Gerar APK Patrono
 on:
   workflow_dispatch:
   push:
@@ -7,21 +7,24 @@ permissions:
   contents: write
 jobs:
   android:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - name: Restaurar fonte do Patrono
+      - name: Restaurar fonte
         run: |
-          cat source048.parts/{000..012} | base64 -d > source.zip
+          cat source.parts/atena-{000..012} | base64 -d > source.zip
           rm -rf app backend build.gradle settings.gradle gradle.properties
           unzip -o source.zip
-          cat ui.parts/{000..003} | base64 -d | gunzip > app/src/main/assets/index.html
-      - name: Configurar Android SDK
-        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+          cp overrides/index.html app/src/main/assets/index.html
+      - name: Preparar Android SDK
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0"
       - name: Compilar APK
         run: |
           curl -fsSL https://services.gradle.org/distributions/gradle-8.11.1-bin.zip -o /tmp/gradle.zip
@@ -29,13 +32,14 @@ jobs:
           /opt/gradle-8.11.1/bin/gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Patrono-0.4.8-Atena-direta-debug
+          name: Patrono-0.5.0-Atena-unificada-debug
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publicar APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.4.8
-          name: Patrono 0.4.8 — Atena direta
+          tag_name: v0.5.0
+          name: Patrono 0.5.0 — Atena unificada
           fail_on_unmatched_files: true
-          body: APK com Atena configurável pelo próprio aparelho, usando a chave Gemini salva localmente.
+          overwrite_files: true
+          body: APK 0.5.0 com nova base unificada da Atena, chat Gemini direto e configurações sem lógica duplicada.
           files: app/build/outputs/apk/debug/app-debug.apk
