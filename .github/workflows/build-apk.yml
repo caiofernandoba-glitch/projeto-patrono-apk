@@ -19,12 +19,12 @@ jobs:
           cat source.parts/atena-{000..012} | base64 -d > source.zip
           rm -rf app backend build.gradle settings.gradle gradle.properties
           unzip -o source.zip
-      - name: Corrigir e validar index.html antes do build
+      - name: Corrigir e validar endpoint da Atena
         run: |
           python3 - <<'PY'
           from pathlib import Path
           old = "const MODEL = 'gemini-1.5-flash';\n      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;"
-          new = "const MODEL = 'gemini-1.5-flash-latest';\n      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;"
+          new = "const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;"
           main = Path('overrides/index.html')
           text = main.read_text()
           if old in text:
@@ -35,9 +35,9 @@ jobs:
               name.write_text(text)
               final = name.read_text()
               if new not in final:
-                  raise SystemExit(f'{name}: modelo final incorreto')
-              if "const MODEL = 'gemini-1.5-flash';" in final or 'models/models/' in final:
-                  raise SystemExit(f'{name}: modelo legado ou rota duplicada')
+                  raise SystemExit(f'{name}: endpoint final incorreto')
+              if 'gemini-1.5-flash-latest' in final or 'models/models/' in final:
+                  raise SystemExit(f'{name}: sufixo latest ou rota duplicada')
           PY
       - name: Preparar Android SDK
         run: |
@@ -51,14 +51,14 @@ jobs:
           /opt/gradle-8.11.1/bin/gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Patrono-0.5.4-Atena-Gemini-1.5-Flash-Latest-debug
+          name: Patrono-0.5.4-Atena-Gemini-1.5-Flash-debug
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publicar APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v0.5.4
-          name: Patrono 0.5.4 - Atena Gemini 1.5 Flash Latest
+          name: Patrono 0.5.4 - Atena Gemini 1.5 Flash
           fail_on_unmatched_files: true
           overwrite_files: true
-          body: APK 0.5.4 com index.html da Atena corrigido e validado antes da compilação.
+          body: APK 0.5.4 com endpoint exato do Gemini 1.5 Flash validado antes da compilação.
           files: app/build/outputs/apk/debug/app-debug.apk
