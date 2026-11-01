@@ -32,14 +32,14 @@ jobs:
           /opt/gradle-8.11.1/bin/gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Patrono-0.5.1-Atena-timeout-60s-debug
+          name: Patrono-0.5.2-Atena-timeout-60s-debug
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publicar APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.5.1
-          name: Patrono 0.5.1 — Atena com timeout de 60 segundos
+          tag_name: v0.5.2
+          name: Patrono 0.5.2 — Atena com timeout de 60 segundos
           fail_on_unmatched_files: true
           overwrite_files: true
-          body: APK 0.5.1 com a base unificada da Atena e timeout de resposta ampliado para 60 segundos.
+          body: APK 0.5.2 com a base unificada da Atena e timeout de resposta ampliado para 60 segundos.
           files: app/build/outputs/apk/debug/app-debug.apk
