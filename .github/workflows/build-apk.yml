@@ -24,7 +24,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           old = "const MODEL = 'gemini-1.5-flash';\n      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;"
-          new = "const MODEL = 'gemini-3.8-flash';\n      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;"
+          new = "const MODEL = 'gemini-1.5-flash-latest';\n      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;"
           main = Path('overrides/index.html')
           text = main.read_text()
           if old in text:
@@ -36,7 +36,7 @@ jobs:
               final = name.read_text()
               if new not in final:
                   raise SystemExit(f'{name}: modelo final incorreto')
-              if 'gemini-1.5-flash' in final or 'models/models/' in final:
+              if "const MODEL = 'gemini-1.5-flash';" in final or 'models/models/' in final:
                   raise SystemExit(f'{name}: modelo legado ou rota duplicada')
           PY
       - name: Preparar Android SDK
@@ -51,13 +51,13 @@ jobs:
           /opt/gradle-8.11.1/bin/gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Patrono-0.5.4-Atena-Gemini-3.8-Flash-debug
+          name: Patrono-0.5.4-Atena-Gemini-1.5-Flash-Latest-debug
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publicar APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v0.5.4
-          name: Patrono 0.5.4 - Atena Gemini 3.8 Flash
+          name: Patrono 0.5.4 - Atena Gemini 1.5 Flash Latest
           fail_on_unmatched_files: true
           overwrite_files: true
           body: APK 0.5.4 com index.html da Atena corrigido e validado antes da compilação.
