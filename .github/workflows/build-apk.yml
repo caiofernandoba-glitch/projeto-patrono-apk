@@ -14,13 +14,22 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Restaurar fonte e corrigir Atena
+      - name: Restaurar fonte e atualizar Atena
         run: |
           cat source.parts/atena-{000..012} | base64 -d > source.zip
           rm -rf app backend build.gradle settings.gradle gradle.properties
           unzip -o source.zip
-          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCmltcG9ydCByZQpwID0gUGF0aCgib3ZlcnJpZGVzL2luZGV4Lmh0bWwiKQpzID0gcC5yZWFkX3RleHQoKQplbmRwb2ludCA9ICJodHRwczovL2dlbmVyYXRpdmVsYW5ndWFnZS5nb29nbGVhcGlzLmNvbS92MWJldGEvbW9kZWxzL2dlbWluaS0xLjUtZmxhc2g6Z2VuZXJhdGVDb250ZW50P2tleT0ke2FwaUtleX0iCnBhdHRlcm4gPSByImNvbnN0XHMrTU9ERUxccyo9XHMqJ2dlbWluaS0xXC41LWZsYXNoJztccypjb25zdFxzK2VuZHBvaW50XHMqPVxzKmBbXmBdKmdlbmVyYXRlQ29udGVudFw/a2V5PVwkXHthcGlLZXlcfWA7IgpvdXQsIGNvdW50ID0gcmUuc3VibihwYXR0ZXJuLCAiY29uc3QgZW5kcG9pbnQgPSBgIiArIGVuZHBvaW50ICsgImA7IiwgcywgY291bnQ9MSkKaWYgY291bnQgIT0gMSBvciBlbmRwb2ludCBub3QgaW4gb3V0IG9yICJtb2RlbHMvbW9kZWxzLyIgaW4gb3V0OgogICAgcmFpc2UgU3lzdGVtRXhpdCgiYXNrQXRlbmEgZW5kcG9pbnQgdmFsaWRhdGlvbiBmYWlsZWQiKQpwLndyaXRlX3RleHQob3V0KQo=' | base64 -d > /tmp/fix_atena.py
-          python3 /tmp/fix_atena.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('overrides/index.html')
+          s = p.read_text()
+          endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}'
+          out, count = re.subn(r'const\s+(?:MODEL\s*=\s*[\x27][^\x27]+[\x27];\s*)?endpoint\s*=\s*`https://generativelanguage\.googleapis\.com/v1beta/models/[^`]+:generateContent\?key=\$\{apiKey\}`;', 'const endpoint = `' + endpoint + '`;', s, count=1)
+          if count != 1 or endpoint not in out or 'models/models/' in out:
+              raise SystemExit('askAtena: endpoint final invalido')
+          p.write_text(out)
+          PY
           cp overrides/index.html app/src/main/assets/index.html
       - name: Preparar Android SDK
         run: |
@@ -34,14 +43,13 @@ jobs:
           /opt/gradle-8.11.1/bin/gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Patrono-0.5.3-Atena-Gemini-1.5-Flash-debug
+          name: Patrono-0.5.4-Atena-Gemini-3.8-Flash-debug
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publicar APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.5.3
-          name: Patrono 0.5.3 - Atena Gemini 1.5 Flash
+          tag_name: v0.5.4
+          name: Patrono 0.5.4 - Atena Gemini 3.8 Flash
           fail_on_unmatched_files: true
-          overwrite_files: true
-          body: APK 0.5.3 com endpoint explícito do Gemini em askAtena.
+          body: APK 0.5.4 com Gemini 3.8 Flash, substituto atual do Gemini 1.5 Flash descontinuado.
           files: app/build/outputs/apk/debug/app-debug.apk
