@@ -1,0 +1,46 @@
+name: Apascentar signing diagnostic
+on:
+  push:
+    branches: [apascentar/entrada-local-1.0.33]
+    paths: [.github/workflows/apascentar-signing-diagnostic.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    env:
+      TARGET: 9F8F7222ED919B5F0DC6E7FCD1827C04A15E6CCEC375EDA41D7E044CE0104492
+      KS: ${{ secrets.APASCENTAR_KEYSTORE_BASE64 || secrets.KEYSTORE_BASE64 || secrets.SIGNING_KEYSTORE_BASE64 }}
+      SP: ${{ secrets.APASCENTAR_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD || secrets.SIGNING_STORE_PASSWORD }}
+      ALIAS: ${{ secrets.APASCENTAR_KEY_ALIAS || secrets.KEY_ALIAS || secrets.SIGNING_KEY_ALIAS }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct and inspect archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/diag
+          for d in source.parts source048.parts; do
+            mapfile -t p < <(find "$d" -maxdepth 1 -type f -regextype posix-extended -regex ".*/[0-9]{3}" | sort)
+            [ ${#p[@]} -gt 0 ] || { echo "$d: no archive chunks"; continue; }
+            cat "${p[@]}" | base64 -d > "/tmp/diag/$d.zip"
+            unzip -tqq "/tmp/diag/$d.zip" && echo "$d: archive valid"
+            mkdir -p "/tmp/diag/$d"; unzip -qq "/tmp/diag/$d.zip" -d "/tmp/diag/$d"
+            echo "$d: candidate keystore filenames:"
+            find "/tmp/diag/$d" -type f \( -iname "*.jks" -o -iname "*.keystore" -o -iname "*.p12" -o -iname "*.pfx" \) -printf "%f\n" | sort -u || true
+          done
+      - name: Test configured signing material without disclosure
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "keystore_secret_present=$([ -n "$KS" ] && echo yes || echo no)"
+          echo "store_password_secret_present=$([ -n "$SP" ] && echo yes || echo no)"
+          echo "alias_secret_present=$([ -n "$ALIAS" ] && echo yes || echo no)"
+          if [ -z "$KS" ] || [ -z "$SP" ]; then echo certificate_match=not-testable; exit 0; fi
+          printf %s "$KS" | base64 -d > /tmp/signing.keystore
+          a=(-keystore /tmp/signing.keystore -storepass "$SP"); [ -n "$ALIAS" ] && a+=(-alias "$ALIAS")
+          c=$(keytool -list -v "${a[@]}" 2>/dev/null | awk -F": " "/SHA256:/{gsub(\":\",\"\",\$2);print toupper(\$2);exit}")
+          [ "$c" = "$TARGET" ] && echo certificate_match=yes || echo certificate_match=no
+      - name: Safe outcome
+        run: echo "No source archive, credentials, keystore content, or APK was uploaded."
