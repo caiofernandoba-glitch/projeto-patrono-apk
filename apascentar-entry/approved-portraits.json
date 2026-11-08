@@ -1,26 +1,153 @@
 {
-  "reference": "image:8dd21cda",
-  "status": "visually_mapped_not_cropped_or_applied",
-  "grid": {"columns":8,"indexing":"one_based","note":"Count portrait rows below the header. Crop artwork only, excluding printed labels. Use only the first three rows."},
+  "source": "image:8dd21cda",
+  "status": "integrated_in_entry_source_not_apk",
   "characters": [
-    {"id":"maria","name":"Maria","row":1,"column":8},
-    {"id":"noe","name":"Noé","row":2,"column":1},
-    {"id":"pedro","name":"Pedro","row":2,"column":5},
-    {"id":"rute","name":"Rute","row":2,"column":7},
-    {"id":"daniel","name":"Daniel","row":3,"column":7},
-    {"id":"jesus","name":"Jesus","row":1,"column":7},
-    {"id":"davi","name":"Davi","row":1,"column":4},
-    {"id":"moises","name":"Moisés","row":1,"column":1},
-    {"id":"abraao","name":"Abraão","row":2,"column":2},
-    {"id":"paulo","name":"Paulo","row":2,"column":6},
-    {"id":"jose","name":"José","row":2,"column":3},
-    {"id":"josue","name":"Josué","row":3,"column":4},
-    {"id":"ester","name":"Ester","row":1,"column":6},
-    {"id":"debora","name":"Débora","row":3,"column":8},
-    {"id":"elias","name":"Elias","row":3,"column":5},
-    {"id":"golias","name":"Golias","row":1,"column":5},
-    {"id":"arao","name":"Arão","row":1,"column":3},
-    {"id":"sansao","name":"Sansão","row":2,"column":8}
+    {
+      "id": "maria",
+      "name": "Maria",
+      "row": 1,
+      "column": 8,
+      "file": "maria.png"
+    },
+    {
+      "id": "noe",
+      "name": "Noé",
+      "row": 2,
+      "column": 1,
+      "file": "noe.png"
+    },
+    {
+      "id": "pedro",
+      "name": "Pedro",
+      "row": 2,
+      "column": 5,
+      "file": "pedro.png"
+    },
+    {
+      "id": "rute",
+      "name": "Rute",
+      "row": 2,
+      "column": 7,
+      "file": "rute.png"
+    },
+    {
+      "id": "daniel",
+      "name": "Daniel",
+      "row": 3,
+      "column": 7,
+      "file": "daniel.png"
+    },
+    {
+      "id": "jesus",
+      "name": "Jesus",
+      "row": 1,
+      "column": 7,
+      "file": "jesus.png"
+    },
+    {
+      "id": "davi",
+      "name": "Davi",
+      "row": 1,
+      "column": 4,
+      "file": "davi.png"
+    },
+    {
+      "id": "moises",
+      "name": "Moisés",
+      "row": 1,
+      "column": 1,
+      "file": "moises.png"
+    },
+    {
+      "id": "abraao",
+      "name": "Abraão",
+      "row": 2,
+      "column": 2,
+      "file": "abraao.png"
+    },
+    {
+      "id": "paulo",
+      "name": "Paulo",
+      "row": 2,
+      "column": 6,
+      "file": "paulo.png"
+    },
+    {
+      "id": "jose",
+      "name": "José",
+      "row": 2,
+      "column": 3,
+      "file": "jose.png"
+    },
+    {
+      "id": "josue",
+      "name": "Josué",
+      "row": 3,
+      "column": 4,
+      "file": "josue.png"
+    },
+    {
+      "id": "ester",
+      "name": "Ester",
+      "row": 1,
+      "column": 6,
+      "file": "ester.png"
+    },
+    {
+      "id": "debora",
+      "name": "Débora",
+      "row": 3,
+      "column": 8,
+      "file": "debora.png"
+    },
+    {
+      "id": "elias",
+      "name": "Elias",
+      "row": 3,
+      "column": 5,
+      "file": "elias.png"
+    },
+    {
+      "id": "golias",
+      "name": "Golias",
+      "row": 1,
+      "column": 5,
+      "file": "golias.png"
+    },
+    {
+      "id": "arao",
+      "name": "Arão",
+      "row": 1,
+      "column": 3,
+      "file": "arao.png"
+    },
+    {
+      "id": "sansao",
+      "name": "Sansão",
+      "row": 2,
+      "column": 8,
+      "file": "sansao.png"
+    }
   ],
-  "rules": ["Preserve confirmed order and IDs.","Do not use malformed or duplicated lower-row labels.","Do not claim image assets applied before actual crop and integration.","APK must retain original signing identity and app data."]
+  "encoding": "Original lossless PNG embedded inline in entry.js; works offline",
+  "sha256": {
+    "maria": "5087c9762a7624be664d9a89654463893722a21755b497cc5ffde9e32d77b4ff",
+    "noe": "a97f5d85411a062cf0d58ebfd12b3b35f424d969ddd0ca2e9f76210fd59c4721",
+    "pedro": "d7bb5fbeae354f048dde2212b9949a8d2b9e06566099f22719ad1503d7b9c36b",
+    "rute": "da51d0731e2f4f4c332c85529362a899e82c4ebcd4e6ca98fcf6d37a23fd094d",
+    "daniel": "8e3bfc8a8e8711b14ca1946c1306f762bbd9980b8a659dc4e6b0b7cbf6a5701f",
+    "jesus": "64a252069de4902e3a3c1143a0b51298794818c02fdce844d1460b57089b104b",
+    "davi": "9a7a46424f70e76e2eef222790e5baad45a324f4f7850ce843ae184dcf440e9b",
+    "moises": "377723137eb71da3d1fd13fa49b3c96bdbc7b69728cf0912ee6cfa915dff7350",
+    "abraao": "460cedf87175f2442c3804992d08b4f102be262422e14bacf4d280a7ac0f43d4",
+    "paulo": "c282e69df8e908b5bcf3fc46a2aa9f135765fb9025b48a5774f980f9f11131ea",
+    "jose": "543bb4858f0ced2a6a10cffd94416131296ba38f6d7c4b28a50f369673cfc0d1",
+    "josue": "7057fedb4b811bd665d20d04ab838a48decdfb844c62cbd05120dd519ee0b971",
+    "ester": "7757adce9118e51eafa759694ce410f9ddbffbc9d39a7f00780ef12aa3ba7362",
+    "debora": "16debd2a17b927c5170ca7f58038dfe0825ecbb14f5a25fba3b5d22e6656dc08",
+    "elias": "198ed2bab701ba87d101739ade23c9746d0935c15f446daf80bba28cf28b8bb4",
+    "golias": "bd65ff73f2c995d4b2c548fe9bc33b8cb29aaa26d8c4415ef04281b2023e3720",
+    "arao": "e8a7eb93b91ef4d4a0e05299e360138f6bbb2d411f608160ec6767a3a2ac0364",
+    "sansao": "1f42310f16a2acd372c271267ab2ecfa89bc006edbc8ead9da29a92f25f456a9"
+  }
 }

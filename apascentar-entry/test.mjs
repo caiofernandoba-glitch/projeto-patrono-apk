@@ -14,17 +14,21 @@ assert.deepEqual(await page.locator(".ap-entry-avatar span").allTextContents(),e
 await page.locator("#ap-entry-name").fill("   ");await page.locator("[data-avatar=ester]").click();assert(await go.isDisabled());
 await page.locator("#ap-entry-name").fill("  Caio  ");assert(await go.isEnabled());
 assert.equal(await page.locator("[aria-checked=true]").count(),1);
+assert.equal(await page.locator('.ap-entry-avatar img.ap-approved-portrait').count(),18);
+await page.waitForFunction(()=>Array.from(document.querySelectorAll('.ap-entry-avatar img')).every(i=>i.complete&&i.naturalWidth>0));
+assert.equal(await page.locator('.ap-entry-avatar svg').count(),0);
+assert.equal(await page.evaluate(()=>new Set(Array.from(document.querySelectorAll('.ap-entry-avatar img')).map(i=>i.src)).size),18);
 await page.screenshot({path:"build-entry/entrada-mobile.png",fullPage:true});
 await go.click();assert(await root.isHidden());
 assert.deepEqual(await page.evaluate(()=>window.ApascentarProfile.read()),{version:1,name:"Caio",avatar:"ester"});
 await page.evaluate(()=>localStorage.setItem("reader-test-preserved","existing reading note"));
 await page.reload();assert(await root.isHidden());
 const people=await page.evaluate(()=>window.ApascentarProfile.characters);
-for(const p of people){await page.locator("#ap-profile-open").click();await page.locator("#ap-entry-name").fill("Caio");await page.locator("[data-avatar="+p.id+"]").click();await go.click();assert.equal(await page.evaluate(()=>window.ApascentarProfile.read().avatar),p.id);}
+for(const p of people){await page.locator("#ap-profile-open").click();await page.locator("#ap-entry-name").fill("Caio");await page.locator("[data-avatar="+p.id+"]").click();await go.click();assert.equal(await page.evaluate(()=>window.ApascentarProfile.read().avatar),p.id);assert.equal(await page.locator('#ap-profile-open img').getAttribute('src'),await page.locator('[data-avatar='+p.id+'] img').getAttribute('src'));}
 await page.locator("#ap-profile-open").click();await page.locator("#ap-entry-name").fill("Not saved");await page.locator(".ap-entry-cancel").click();assert.equal(await page.evaluate(()=>window.ApascentarProfile.read().name),"Caio");
 assert.equal(await page.evaluate(()=>localStorage.getItem("reader-test-preserved")),"existing reading note");
 await page.evaluate(()=>localStorage.setItem(window.ApascentarProfile.key,"invalid json"));await page.reload();assert(await root.isVisible());
 const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);assert(!overflow);
-const report={firstEntry:true,nameAndAvatarRequired:true,characters:18,exactConfirmedNames:true,allCharactersSave:true,persists:true,skipOnReopen:true,editProfile:true,cancelPreserves:true,existingDataPreserved:true,corruptStorageHandled:true,mobileNoOverflow:!overflow,pageErrors:errors,approvedPortraitsApplied:false};
+const report={firstEntry:true,nameAndAvatarRequired:true,characters:18,exactConfirmedNames:true,allCharactersSave:true,persists:true,skipOnReopen:true,editProfile:true,cancelPreserves:true,existingDataPreserved:true,corruptStorageHandled:true,mobileNoOverflow:!overflow,pageErrors:errors,approvedPortraitsApplied:true,all18ImagesLoaded:true,all18UniquePortraits:true,profileUsesSelectedPortrait:true};
 fs.writeFileSync("build-entry/ui-test-report.json",JSON.stringify(report,null,2));
 assert.equal(errors.length,0,"JavaScript errors");await browser.close();console.log(JSON.stringify(report));
