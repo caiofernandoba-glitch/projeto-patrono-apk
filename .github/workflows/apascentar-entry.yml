@@ -1,0 +1,38 @@
+name: Validar entrada Apascentar
+on:
+  push:
+    branches: [apascentar/entrada-local-1.0.33]
+    paths: [apascentar-entry/**, .github/workflows/apascentar-entry.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  entry:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Integrar sem alterar leitor
+        run: python3 apascentar-entry/integrate.py
+      - name: Validar JavaScript
+        run: node --check apascentar-entry/entry.js
+      - name: Preparar teste de interface
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Testar entrada, persistencia e edicao
+        run: |
+          python3 -m http.server 8765 --directory build-entry >/tmp/entry-http.log 2>&1 &
+          node apascentar-entry/test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Apascentar-entrada-validacao
+          path: |
+            build-entry/*report.json
+            build-entry/entrada-mobile.png
+            apascentar-entry/entry.js
+            apascentar-entry/entry.css
+          if-no-files-found: warn
