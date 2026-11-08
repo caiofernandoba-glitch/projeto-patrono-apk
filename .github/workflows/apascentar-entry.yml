@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: 22
       - name: Integrar sem alterar leitor
-        run: python3 apascentar-entry/integrate.py
+        run: python3 apascentar-entry/validate.py
       - name: Validar JavaScript
         run: node --check apascentar-entry/entry.js
       - name: Preparar teste de interface
@@ -26,6 +26,12 @@ jobs:
         run: |
           python3 -m http.server 8765 --directory build-entry >/tmp/entry-http.log 2>&1 &
           node apascentar-entry/test.mjs
+      - name: Resultado de interface
+        if: always()
+        run: |
+          if [ -f build-entry/ui-test-report.json ]; then
+            cat build-entry/ui-test-report.json >> "$GITHUB_STEP_SUMMARY"
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
