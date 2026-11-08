@@ -1,0 +1,26 @@
+{
+  "reference": "image:8dd21cda",
+  "status": "visually_mapped_not_cropped_or_applied",
+  "grid": {"columns":8,"indexing":"one_based","note":"Count portrait rows below the header. Crop artwork only, excluding printed labels. Use only the first three rows."},
+  "characters": [
+    {"id":"maria","name":"Maria","row":1,"column":8},
+    {"id":"noe","name":"Noé","row":2,"column":1},
+    {"id":"pedro","name":"Pedro","row":2,"column":5},
+    {"id":"rute","name":"Rute","row":2,"column":7},
+    {"id":"daniel","name":"Daniel","row":3,"column":7},
+    {"id":"jesus","name":"Jesus","row":1,"column":7},
+    {"id":"davi","name":"Davi","row":1,"column":4},
+    {"id":"moises","name":"Moisés","row":1,"column":1},
+    {"id":"abraao","name":"Abraão","row":2,"column":2},
+    {"id":"paulo","name":"Paulo","row":2,"column":6},
+    {"id":"jose","name":"José","row":2,"column":3},
+    {"id":"josue","name":"Josué","row":3,"column":4},
+    {"id":"ester","name":"Ester","row":1,"column":6},
+    {"id":"debora","name":"Débora","row":3,"column":8},
+    {"id":"elias","name":"Elias","row":3,"column":5},
+    {"id":"golias","name":"Golias","row":1,"column":5},
+    {"id":"arao","name":"Arão","row":1,"column":3},
+    {"id":"sansao","name":"Sansão","row":2,"column":8}
+  ],
+  "rules": ["Preserve confirmed order and IDs.","Do not use malformed or duplicated lower-row labels.","Do not claim image assets applied before actual crop and integration.","APK must retain original signing identity and app data."]
+}
