@@ -1,0 +1,27 @@
+name: Verify Apascentar parallel signing backup
+on:
+  push:
+    branches: [apascentar/entrada-local-1.0.33]
+    paths: [.github/workflows/apascentar-parallel-signing-check.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-signing-backup:
+    runs-on: ubuntu-latest
+    env:
+      KS: ${{ secrets.APASCENTAR_PARALLEL_KEYSTORE_BASE64 }}
+      SP: ${{ secrets.APASCENTAR_PARALLEL_KEYSTORE_PASSWORD }}
+    steps:
+      - name: Verify encrypted signing backup without disclosure
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$KS" && test -n "$SP"
+          keyfile="$RUNNER_TEMP/apascentar-parallel.p12"
+          trap 'rm -f "$keyfile"' EXIT
+          printf '%s' "$KS" | base64 -d > "$keyfile"
+          chmod 600 "$keyfile"
+          actual=$(keytool -list -v -keystore "$keyfile" -storetype PKCS12 -storepass:env SP -alias apascentar-paralelo | awk -F': ' '/SHA256:/{gsub(":","",$2);print tolower($2);exit}')
+          test "$actual" = "8f3f6014280a303d5769594ace06c2db9580c6136153d1c4318351a1addff270"
+          echo 'Encrypted signing backup matches the delivered parallel APK.' >> "$GITHUB_STEP_SUMMARY"
