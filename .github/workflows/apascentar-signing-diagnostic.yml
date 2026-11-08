@@ -19,13 +19,14 @@ jobs:
       - name: Reconstruct and inspect archives
         shell: bash
         run: |
-          set -euo pipefail
+          set -uo pipefail
           mkdir -p /tmp/diag
           for d in source.parts source048.parts; do
             mapfile -t p < <(find "$d" -maxdepth 1 -type f -regextype posix-extended -regex ".*/[0-9]{3}" | sort)
             [ ${#p[@]} -gt 0 ] || { echo "$d: no archive chunks"; continue; }
-            cat "${p[@]}" | base64 -d > "/tmp/diag/$d.zip"
-            unzip -tqq "/tmp/diag/$d.zip" && echo "$d: archive valid"
+            if ! cat "${p[@]}" | base64 -d > "/tmp/diag/$d.zip"; then echo "$d: base64 decode failed"; continue; fi
+            if ! unzip -tqq "/tmp/diag/$d.zip"; then echo "$d: not a valid zip archive"; continue; fi
+            echo "$d: archive valid"
             mkdir -p "/tmp/diag/$d"; unzip -qq "/tmp/diag/$d.zip" -d "/tmp/diag/$d"
             echo "$d: candidate keystore filenames:"
             find "/tmp/diag/$d" -type f \( -iname "*.jks" -o -iname "*.keystore" -o -iname "*.p12" -o -iname "*.pfx" \) -printf "%f\n" | sort -u || true
@@ -33,12 +34,12 @@ jobs:
       - name: Test configured signing material without disclosure
         shell: bash
         run: |
-          set -euo pipefail
+          set -uo pipefail
           echo "keystore_secret_present=$([ -n "$KS" ] && echo yes || echo no)"
           echo "store_password_secret_present=$([ -n "$SP" ] && echo yes || echo no)"
           echo "alias_secret_present=$([ -n "$ALIAS" ] && echo yes || echo no)"
           if [ -z "$KS" ] || [ -z "$SP" ]; then echo certificate_match=not-testable; exit 0; fi
-          printf %s "$KS" | base64 -d > /tmp/signing.keystore
+          if ! printf %s "$KS" | base64 -d > /tmp/signing.keystore; then echo certificate_match=not-testable; exit 0; fi
           a=(-keystore /tmp/signing.keystore -storepass "$SP"); [ -n "$ALIAS" ] && a+=(-alias "$ALIAS")
           c=$(keytool -list -v "${a[@]}" 2>/dev/null | awk -F": " "/SHA256:/{gsub(\":\",\"\",\$2);print toupper(\$2);exit}")
           [ "$c" = "$TARGET" ] && echo certificate_match=yes || echo certificate_match=no
