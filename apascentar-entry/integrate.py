@@ -1,9 +1,22 @@
-import hashlib,json,struct,urllib.request,zipfile
+import hashlib,json,struct,urllib.request,zipfile,time
 from pathlib import Path
 BASE_URL="https://github.com/caiofernandoba-glitch/projeto-patrono-apk/releases/download/apascentar-v1.0.32-hero-ampliado/Apascentar-hero-ampliado-estudos-validado-1.0.32-code33.apk"
 EXPECTED="db7bff57863ae01c2e18bc6460e4f18ab8291e6f3437c4f0b54191b57fe30c9d"
 out=Path("build-entry");out.mkdir(exist_ok=True)
-raw=urllib.request.urlopen(BASE_URL,timeout=90).read()
+raw=None
+urls=[BASE_URL+"?download=1","https://api.github.com/repos/caiofernandoba-glitch/projeto-patrono-apk/releases/assets/722709112"]
+for attempt in range(3):
+    for url in urls:
+        try:
+            request=urllib.request.Request(url,headers={"Accept":"application/octet-stream","User-Agent":"Apascentar-validation"})
+            raw=urllib.request.urlopen(request,timeout=90).read()
+            if hashlib.sha256(raw).hexdigest()==EXPECTED:break
+            raw=None
+        except Exception:
+            raw=None
+    if raw is not None:break
+    time.sleep(2*(attempt+1))
+assert raw is not None,"Unable to fetch verified original APK"
 assert hashlib.sha256(raw).hexdigest()==EXPECTED,"base integrity"
 (out/"base.apk").write_bytes(raw)
 with zipfile.ZipFile(out/"base.apk") as z:

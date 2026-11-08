@@ -1,7 +1,6 @@
 from pathlib import Path
 import json,os,traceback
 src=Path("apascentar-entry/integrate.py").read_text()
-src="\n".join(line for line in src.splitlines() if not line.startswith("EXPECTED=") and not line.startswith("assert hashlib.sha256(raw).hexdigest()==EXPECTED"))
 insert="""
 images=[n for n in original if n.startswith("assets/") and n.lower().endswith((".png",".jpg",".jpeg",".webp"))]
 heroes=[n for n in images if "jesus" in n.lower() and "ovelh" in n.lower()]
